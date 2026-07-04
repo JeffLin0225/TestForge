@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`UserCard.vue > 渲染結果應與快照一致 1`] = `
+"<div data-v-d6f62909="" class="user-card"><img data-v-d6f62909="" src="https://gravatar.com/avatar/test@example.com?d=identicon" alt="Test User" class="avatar">
+  <div data-v-d6f62909="" class="info">
+    <h3 data-v-d6f62909="">Test User</h3>
+    <p data-v-d6f62909="">test@example.com</p><span data-v-d6f62909="" class="badge active">啟用</span>
+  </div><button data-v-d6f62909="">編輯</button><button data-v-d6f62909="" class="danger">刪除</button>
+</div>"
+`;

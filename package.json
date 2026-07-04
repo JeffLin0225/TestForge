@@ -1,0 +1,19 @@
+{
+  "name": "ast-and-openapi-demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@babel/parser": "^8.0.0",
+    "acorn": "^8.17.0",
+    "acorn-walk": "^8.3.5",
+    "js-yaml": "^5.2.1"
+  }
+}
