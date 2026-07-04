@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const REPORT_PATH = path.join(__dirname, 'UnitTestReport.md');
+const REPORT_PATH = path.join(__dirname, 'UnitTest-Report.md');
 const RESULTS_PATH = path.join(__dirname, 'sample-vue-project', 'test-results.json');
 
 function updateReport() {
@@ -17,11 +17,11 @@ function updateReport() {
     console.log('解析測試報告失敗，檔案可能不完整');
     process.exit(1);
   }
-  
+
   const total = data.numTotalTests || 0;
   const passed = data.numPassedTests || 0;
   const failed = data.numFailedTests || 0;
-  
+
   let color = 'brightgreen';
   if (failed > 0) color = 'red';
   else if (total === 0) color = 'yellow';
@@ -42,11 +42,11 @@ function updateReport() {
 | 檔案名稱 | 狀態 | 通過/總數 |
 | --- | --- | --- |
 ${data.testResults.map(file => {
-  const fileTotal = file.assertionResults.length;
-  const filePassed = file.assertionResults.filter(r => r.status === 'passed').length;
-  const statusIcon = file.status === 'passed' ? '✅' : '❌';
-  return `| \`${path.basename(file.name)}\` | ${statusIcon} | ${filePassed} / ${fileTotal} |`;
-}).join('\n')}
+    const fileTotal = file.assertionResults.length;
+    const filePassed = file.assertionResults.filter(r => r.status === 'passed').length;
+    const statusIcon = file.status === 'passed' ? '✅' : '❌';
+    return `| \`${path.basename(file.name)}\` | ${statusIcon} | ${filePassed} / ${fileTotal} |`;
+  }).join('\n')}
 
 `;
 

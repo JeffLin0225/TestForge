@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const REPORT_PATH = path.join(__dirname, 'coverage-report.md');
+const REPORT_PATH = path.join(__dirname, 'Coverage-Report.md');
 const COVERAGE_PATH = path.join(__dirname, 'sample-vue-project', 'coverage', 'coverage-summary.json');
 
 function updateReport() {

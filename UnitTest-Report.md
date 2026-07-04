@@ -15,9 +15,9 @@
 | --- | --- | --- |
 | `App.vue.test.ts` | ✅ | 3 / 3 |
 | `userService.test.ts` | ✅ | 25 / 25 |
+| `useCart.test.ts` | ✅ | 54 / 54 |
 | `LoginForm.vue.test.ts` | ✅ | 15 / 15 |
 | `UserCard.vue.test.ts` | ✅ | 9 / 9 |
-| `useCart.test.ts` | ✅ | 54 / 54 |
 | `format.test.ts` | ✅ | 56 / 56 |
 | `math.test.ts` | ✅ | 62 / 62 |
 | `validation.test.ts` | ✅ | 45 / 45 |
