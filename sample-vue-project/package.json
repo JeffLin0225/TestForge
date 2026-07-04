@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest --reporter=default --reporter=json --outputFile=test-results.json",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "vue": "^3.4.21"

@@ -1,6 +1,23 @@
 # testforge
 
 
+![Coverage](https://img.shields.io/badge/Coverage-88.48%25-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-269_Passed-success)
+
+## Test Coverage
+
+This project uses automatically generated tests via `testforge`. 
+Current coverage is **88.48%** overall!
+
+| Category | Coverage |
+| --- | --- |
+| Statements | 88.48% |
+| Branches | 85.88% |
+| Functions | 81.39% |
+| Lines | 88.48% |
+
+To view the interactive HTML report, run `npm run test:coverage` and open `sample-vue-project/coverage/index.html` in your browser.
+
 
 ## Getting started
 

@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "cd sample-vue-project && npm run test && cd .. && node update-test-report.js",
+    "test:coverage": "cd sample-vue-project && npm run test:coverage && cd .. && node update-readme.js"
   },
   "keywords": [],
   "author": "",
