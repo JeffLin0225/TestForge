@@ -237,6 +237,7 @@ npx vitest run \
   --coverage \
   --coverage.reporter=json-summary \
   --coverage.reporter=text \
+  --coverage.reporter=html \
   2>&1 || TEST_EXIT_CODE=$?
 
 cd - > /dev/null
