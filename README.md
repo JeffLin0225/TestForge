@@ -1,110 +1,273 @@
-# testforge
+# 🔧 TestForge
 
+> **自動化測試平台** — 掃描專案、產生測試、執行分析、產生報告，全部自動完成。
 
+![Tests](https://img.shields.io/badge/Tests-269_Passed-brightgreen)
 ![Coverage](https://img.shields.io/badge/Coverage-88.48%25-brightgreen)
-![Tests](https://img.shields.io/badge/Tests-269_Passed-success)
+![Node](https://img.shields.io/badge/Node.js-20+-green)
+![License](https://img.shields.io/badge/License-ISC-blue)
 
-## Test Coverage
+---
 
-This project uses automatically generated tests via `testforge`. 
-Current coverage is **88.48%** overall!
+## ✨ 功能特色
 
-| Category | Coverage |
+| 功能 | 說明 |
+| --- | --- |
+| 🌳 **AST 智慧分析** | 用抽象語法樹解析你的程式碼，提取所有 exported 函數 |
+| 🧪 **自動產生測試** | 根據函數簽名、參數型別、命名模式，自動產生 Vitest 單元測試 |
+| 🟩 **Vue 元件測試** | 分析 `<template>` 和 `<script setup>`，產生完整的元件互動測試 |
+| 📊 **覆蓋率報告** | 執行測試並產生覆蓋率報告，含 Markdown 和互動式 HTML |
+| 🤖 **GitHub Action** | 一行引入，自動在 CI/CD 中執行測試並產生報告 |
+| 📤 **報告分支** | 自動將報告推送到獨立分支，方便查閱 |
+| 💬 **PR 留言** | 在 Pull Request 上自動留言測試摘要 |
+| ⚡ **K6 負載測試** | 讀取 OpenAPI 文件，自動產生 k6 負載測試腳本 |
+
+---
+
+## 🚀 快速開始
+
+### 方式一：GitHub Action（推薦）
+
+在你的專案中建立 `.github/workflows/testforge.yml`：
+
+```yaml
+name: TestForge — 自動測試
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: JeffLin0225/testforge@v1
+        with:
+          project-path: './'
+```
+
+就這樣！TestForge 會自動：
+1. 🔍 掃描你的專案
+2. 🧪 產生測試腳本
+3. 📦 安裝必要依賴（vitest 等）
+4. ▶️ 執行測試 & 覆蓋率分析
+5. 📊 產生報告 & 推送到 `testforge/reports` 分支
+6. 💬 在 PR 上留言摘要
+
+### 方式二：CLI 本地執行
+
+```bash
+# 1. Clone TestForge
+git clone https://github.com/JeffLin0225/testforge.git
+cd testforge
+
+# 2. 安裝依賴
+npm install
+
+# 3. 掃描你的專案並產生測試
+node testforge.js /path/to/your/project
+
+# 4. 或使用完整腳本（含自動安裝依賴 + 執行測試）
+bash scripts/run-testforge.sh /path/to/your/project
+```
+
+---
+
+## ⚙️ GitHub Action 設定選項
+
+```yaml
+- uses: JeffLin0225/testforge@v1
+  with:
+    # 必填：要掃描的專案目錄
+    project-path: './'
+    
+    # 選填：Node.js 版本（預設 20）
+    node-version: '20'
+    
+    # 選填：是否推送報告到分支（預設 true）
+    create-branch: 'true'
+    
+    # 選填：報告分支名稱（預設 testforge/reports）
+    branch-name: 'testforge/reports'
+    
+    # 選填：是否在 PR 留言（預設 true）
+    comment-on-pr: 'true'
+    
+    # 選填：覆蓋率門檻 %（預設 80）
+    coverage-threshold: '80'
+    
+    # 選填：自動安裝測試依賴（預設 true）
+    install-dependencies: 'true'
+    
+    # 選填：框架偵測（auto / vue / react / node，預設 auto）
+    framework: 'auto'
+```
+
+### Outputs
+
+你可以在後續 step 中使用 TestForge 的輸出：
+
+```yaml
+steps:
+  - uses: JeffLin0225/testforge@v1
+    id: testforge
+    with:
+      project-path: './'
+
+  - name: 檢查結果
+    run: |
+      echo "通過: ${{ steps.testforge.outputs.test-passed }}"
+      echo "失敗: ${{ steps.testforge.outputs.test-failed }}"
+      echo "覆蓋率: ${{ steps.testforge.outputs.coverage-percent }}%"
+```
+
+---
+
+## 🧪 產生的測試範例
+
+### 函數測試
+
+對於以下函數：
+```typescript
+export function formatPrice(amount: number, currency: string = 'NT$'): string {
+  return `${currency} ${amount.toFixed(2)}`;
+}
+```
+
+TestForge 自動產生：
+```typescript
+describe('formatPrice', () => {
+  it('應該是一個函數', () => {
+    expect(typeof formatPrice).toBe('function');
+  });
+
+  it('預期接收 1 個必填參數', () => {
+    expect(formatPrice.length).toBe(1);
+  });
+
+  it('正常呼叫不應拋出錯誤', () => {
+    expect(() => formatPrice(99.99, 'NT$')).not.toThrow();
+  });
+
+  it('回傳型別應為 string', () => {
+    const result = formatPrice(99.99, 'NT$');
+    expect(typeof result).toBe('string');
+  });
+
+  // 邊界值測試
+  it('amount 為 0 時不應崩潰', () => {
+    expect(() => formatPrice(0)).not.toThrow();
+  });
+
+  it('只傳必填參數也不應崩潰', () => {
+    expect(() => formatPrice(99.99)).not.toThrow();
+  });
+});
+```
+
+### Vue 元件測試
+
+對於 Vue 元件，TestForge 會分析 template 和 script：
+```typescript
+describe('LoginForm.vue', () => {
+  it('應該能正常掛載', () => {
+    const wrapper = mount(LoginForm);
+    expect(wrapper.exists()).toBe(true);
+  });
+
+  it('email 輸入框應該存在', () => {
+    const wrapper = mount(LoginForm);
+    expect(wrapper.find('input[type="email"]').exists()).toBe(true);
+  });
+
+  it('點擊「登入」應觸發 submit 事件', async () => {
+    const wrapper = mount(LoginForm);
+    await wrapper.find('button').trigger('click');
+    expect(wrapper.emitted('submit')).toBeTruthy();
+  });
+});
+```
+
+---
+
+## 📂 支援的框架
+
+| 框架 | 偵測方式 | 自動安裝 |
+| --- | --- | --- |
+| **Vue 3** | `package.json` 含 `vue` | `@vue/test-utils`, `jsdom` |
+| **React** | `package.json` 含 `react` | `@testing-library/react`, `jsdom` |
+| **Node.js** | 預設 | `vitest` |
+| **Nuxt** | `package.json` 含 `nuxt` | 同 Vue |
+| **Next.js** | `package.json` 含 `next` | 同 React |
+
+---
+
+## 📊 報告範例
+
+TestForge 產生的報告包含：
+
+- **測試摘要**：通過/失敗數、測試檔案列表
+- **覆蓋率**：Statements / Branches / Functions / Lines
+- **失敗明細**：失敗的測試名稱和錯誤訊息
+- **PR Comment**：自動在 Pull Request 上留言
+
+報告檔案會推送到 `testforge/reports` 分支，方便隨時查閱。
+
+---
+
+## 📖 文件
+
+| 文件 | 說明 |
+| --- | --- |
+| [SPEC.md](docs/SPEC.md) | 完整技術規格書 |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 系統架構文件 |
+
+---
+
+## 🛠️ 本地開發
+
+```bash
+# Clone
+git clone https://github.com/JeffLin0225/testforge.git
+cd testforge
+
+# 安裝依賴
+npm install
+
+# 用範例專案測試
+node testforge.js ./sample-vue-project
+
+# 執行測試
+npm run test
+
+# 執行覆蓋率測試
+npm run test:coverage
+```
+
+---
+
+## 📋 目前測試成果
+
+對 `sample-vue-project` 的測試結果：
+
+| 指標 | 數值 |
+| --- | --- |
+| 測試檔案 | 8 個 |
+| 總測試數 | 269 個 |
+| 通過率 | 100% ✅ |
+| 覆蓋率 | 88.48% |
+
+| 覆蓋率分類 | 百分比 |
 | --- | --- |
 | Statements | 88.48% |
 | Branches | 85.88% |
 | Functions | 81.39% |
 | Lines | 88.48% |
 
-To view the interactive HTML report, run `npm run test:coverage` and open `sample-vue-project/coverage/index.html` in your browser.
+---
 
+## 📄 授權
 
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.com/jefflin-testforge/testforge.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-* [Set up project integrations](https://gitlab.com/jefflin-testforge/testforge/-/settings/integrations)
-
-## Collaborate with your team
-
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+ISC License

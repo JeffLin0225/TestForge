@@ -1,0 +1,267 @@
+name: 'TestForge'
+description: '🔧 自動掃描專案、產生測試案例、執行測試並產生報告'
+author: 'JeffLin0225'
+
+branding:
+  icon: 'check-circle'
+  color: 'green'
+
+# ============================================================
+# Inputs — 使用者可以設定的參數
+# ============================================================
+inputs:
+  project-path:
+    description: '要掃描的專案目錄路徑（相對於 repo 根目錄）'
+    required: true
+    default: './'
+  node-version:
+    description: 'Node.js 版本'
+    required: false
+    default: '20'
+  create-branch:
+    description: '是否將報告推送到獨立分支'
+    required: false
+    default: 'true'
+  branch-name:
+    description: '報告分支名稱'
+    required: false
+    default: 'testforge/reports'
+  comment-on-pr:
+    description: '是否在 PR 上留言測試摘要'
+    required: false
+    default: 'true'
+  coverage-threshold:
+    description: '覆蓋率門檻百分比（低於此值會發出警告）'
+    required: false
+    default: '80'
+  install-dependencies:
+    description: '是否自動安裝測試所需的依賴（vitest, @vue/test-utils 等）'
+    required: false
+    default: 'true'
+  framework:
+    description: '專案框架（auto / vue / react / node），auto 為自動偵測'
+    required: false
+    default: 'auto'
+
+# ============================================================
+# Outputs — Action 完成後可供後續 step 使用的變數
+# ============================================================
+outputs:
+  test-total:
+    description: '測試總數'
+    value: ${{ steps.run-tests.outputs.test-total }}
+  test-passed:
+    description: '通過的測試數'
+    value: ${{ steps.run-tests.outputs.test-passed }}
+  test-failed:
+    description: '失敗的測試數'
+    value: ${{ steps.run-tests.outputs.test-failed }}
+  coverage-percent:
+    description: '覆蓋率百分比'
+    value: ${{ steps.run-tests.outputs.coverage-percent }}
+  report-branch:
+    description: '報告所在的分支名稱'
+    value: ${{ steps.push-report.outputs.report-branch }}
+  report-url:
+    description: '報告的 GitHub 連結'
+    value: ${{ steps.push-report.outputs.report-url }}
+
+# ============================================================
+# 執行步驟 — Composite Action
+# ============================================================
+runs:
+  using: 'composite'
+  steps:
+    # ---- Step 1：設定 Node.js ----
+    - name: '📦 設定 Node.js ${{ inputs.node-version }}'
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    # ---- Step 2：安裝 TestForge 自身的依賴 ----
+    - name: '📦 安裝 TestForge 依賴'
+      shell: bash
+      run: |
+        cd ${{ github.action_path }}
+        npm ci --ignore-scripts 2>/dev/null || npm install --ignore-scripts
+      
+    # ---- Step 3：安裝目標專案的依賴 ----
+    - name: '📦 安裝目標專案依賴'
+      shell: bash
+      run: |
+        PROJECT_PATH="${{ inputs.project-path }}"
+        
+        # 如果目標專案有 package.json，先安裝它自己的依賴
+        if [ -f "$PROJECT_PATH/package.json" ]; then
+          cd "$PROJECT_PATH"
+          npm ci 2>/dev/null || npm install
+          cd -
+        fi
+
+    # ---- Step 4：偵測框架 & 安裝測試依賴 ----
+    - name: '🔍 偵測框架並安裝測試依賴'
+      if: inputs.install-dependencies == 'true'
+      shell: bash
+      run: |
+        PROJECT_PATH="${{ inputs.project-path }}"
+        FRAMEWORK="${{ inputs.framework }}"
+        
+        cd "$PROJECT_PATH"
+        
+        # 自動偵測框架
+        if [ "$FRAMEWORK" = "auto" ]; then
+          if grep -q '"vue"' package.json 2>/dev/null; then
+            FRAMEWORK="vue"
+          elif grep -q '"react"' package.json 2>/dev/null; then
+            FRAMEWORK="react"
+          else
+            FRAMEWORK="node"
+          fi
+        fi
+        
+        echo "🔍 偵測到框架：$FRAMEWORK"
+        
+        # 安裝通用測試依賴
+        npm install --save-dev vitest@latest 2>/dev/null || true
+        
+        # 根據框架安裝額外依賴
+        case "$FRAMEWORK" in
+          vue)
+            npm install --save-dev @vue/test-utils@latest jsdom@latest @vitest/coverage-v8@latest 2>/dev/null || true
+            ;;
+          react)
+            npm install --save-dev @testing-library/react@latest jsdom@latest @vitest/coverage-v8@latest 2>/dev/null || true
+            ;;
+          node)
+            npm install --save-dev @vitest/coverage-v8@latest 2>/dev/null || true
+            ;;
+        esac
+        
+        cd -
+
+    # ---- Step 5：產生測試腳本 ----
+    - name: '🔧 TestForge — 產生測試腳本'
+      shell: bash
+      run: |
+        TESTFORGE_PATH="${{ github.action_path }}"
+        PROJECT_PATH="${{ inputs.project-path }}"
+        
+        echo "🔧 TestForge 開始掃描：$PROJECT_PATH"
+        node "$TESTFORGE_PATH/testforge.js" "$PROJECT_PATH"
+
+    # ---- Step 6：確保 vitest 設定存在 ----
+    - name: '⚙️ 確保 vitest 設定'
+      shell: bash
+      run: |
+        PROJECT_PATH="${{ inputs.project-path }}"
+        TESTFORGE_PATH="${{ github.action_path }}"
+        
+        # 檢查是否已有 vitest 設定
+        HAS_CONFIG=false
+        for f in "$PROJECT_PATH/vitest.config.ts" "$PROJECT_PATH/vitest.config.js" "$PROJECT_PATH/vite.config.ts" "$PROJECT_PATH/vite.config.js"; do
+          if [ -f "$f" ]; then
+            HAS_CONFIG=true
+            break
+          fi
+        done
+        
+        # 如果沒有設定，建立一個基本設定
+        if [ "$HAS_CONFIG" = false ]; then
+          echo "📝 建立基本 vitest 設定..."
+          cat > "$PROJECT_PATH/vitest.config.ts" << 'EOF'
+        import { defineConfig } from 'vitest/config';
+        export default defineConfig({
+          test: {
+            environment: 'jsdom',
+            include: ['__generated_tests__/**/*.test.ts', '__generated_tests__/**/*.test.js'],
+          },
+        });
+        EOF
+        fi
+
+    # ---- Step 7：執行測試 ----
+    - name: '🧪 執行測試 & 覆蓋率分析'
+      id: run-tests
+      shell: bash
+      run: |
+        PROJECT_PATH="${{ inputs.project-path }}"
+        TESTFORGE_PATH="${{ github.action_path }}"
+        THRESHOLD="${{ inputs.coverage-threshold }}"
+        
+        cd "$PROJECT_PATH"
+        
+        # 執行測試（帶覆蓋率），即使測試失敗也繼續
+        npx vitest run \
+          --reporter=default \
+          --reporter=json \
+          --outputFile=testforge-results.json \
+          --coverage \
+          --coverage.reporter=json-summary \
+          --coverage.reporter=text \
+          2>&1 || true
+        
+        cd -
+        
+        # 解析結果並產生報告
+        node "$TESTFORGE_PATH/scripts/generate-report.js" \
+          "$PROJECT_PATH" \
+          "$THRESHOLD"
+
+    # ---- Step 8：推送報告到分支 ----
+    - name: '📤 推送報告到分支'
+      id: push-report
+      if: inputs.create-branch == 'true'
+      shell: bash
+      run: |
+        PROJECT_PATH="${{ inputs.project-path }}"
+        BRANCH_NAME="${{ inputs.branch-name }}"
+        TESTFORGE_PATH="${{ github.action_path }}"
+        
+        bash "$TESTFORGE_PATH/scripts/push-to-branch.sh" \
+          "$PROJECT_PATH" \
+          "$BRANCH_NAME"
+
+    # ---- Step 9：在 PR 留言 ----
+    - name: '💬 在 PR 上留言測試摘要'
+      if: inputs.comment-on-pr == 'true' && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const commentPath = '${{ inputs.project-path }}/testforge-pr-comment.md';
+          
+          if (!fs.existsSync(commentPath)) {
+            console.log('沒有找到 PR comment 內容，跳過');
+            return;
+          }
+          
+          const body = fs.readFileSync(commentPath, 'utf-8');
+          
+          // 找到並更新既有的 TestForge comment（避免重複留言）
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          
+          const existingComment = comments.find(c => 
+            c.body.includes('<!-- testforge-report -->')
+          );
+          
+          const commentBody = `<!-- testforge-report -->\n${body}`;
+          
+          if (existingComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existingComment.id,
+              body: commentBody,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: commentBody,
+            });
+          }
