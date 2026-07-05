@@ -154,19 +154,40 @@ runs:
       shell: bash
       run: |
         PROJECT_PATH="${{ inputs.project-path }}"
-        TESTFORGE_PATH="${{ github.action_path }}"
         
-        # 檢查是否已有 vitest 設定
-        HAS_CONFIG=false
-        for f in "$PROJECT_PATH/vitest.config.ts" "$PROJECT_PATH/vitest.config.js" "$PROJECT_PATH/vite.config.ts" "$PROJECT_PATH/vite.config.js"; do
+        # 1. 如果已有 vitest 專用設定 → 跳過
+        for f in "$PROJECT_PATH/vitest.config.ts" "$PROJECT_PATH/vitest.config.js"; do
           if [ -f "$f" ]; then
-            HAS_CONFIG=true
+            echo "✅ 找到 vitest 設定：$(basename "$f")，跳過建立"
+            exit 0
+          fi
+        done
+        
+        # 2. 如果有 vite.config → 建立 vitest.config.ts 合併設定並加入 jsdom
+        VITE_CONFIG=""
+        for f in "$PROJECT_PATH/vite.config.ts" "$PROJECT_PATH/vite.config.js"; do
+          if [ -f "$f" ]; then
+            VITE_CONFIG="$(basename "$f")"
             break
           fi
         done
         
-        # 如果沒有設定，建立一個基本設定
-        if [ "$HAS_CONFIG" = false ]; then
+        if [ -n "$VITE_CONFIG" ]; then
+          echo "📝 找到 $VITE_CONFIG，建立 vitest.config.ts 合併設定（加入 jsdom 環境）..."
+          VITE_CONFIG_NAME="${VITE_CONFIG%.*}"
+          cat > "$PROJECT_PATH/vitest.config.ts" << EOF
+        import { defineConfig, mergeConfig } from 'vitest/config';
+        import viteConfig from './${VITE_CONFIG_NAME}';
+        
+        export default mergeConfig(viteConfig, defineConfig({
+          test: {
+            environment: 'jsdom',
+            include: ['__generated_tests__/**/*.test.ts', '__generated_tests__/**/*.test.js'],
+          },
+        }));
+        EOF
+        else
+          # 3. 完全沒有設定 → 建立獨立 vitest.config.ts
           echo "📝 建立基本 vitest 設定..."
           cat > "$PROJECT_PATH/vitest.config.ts" << 'EOF'
         import { defineConfig } from 'vitest/config';

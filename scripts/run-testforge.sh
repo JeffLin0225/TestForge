@@ -165,21 +165,47 @@ log_success "測試腳本產生完成"
 # ============================================================
 log_step "Step 4：檢查 vitest 設定"
 
-HAS_CONFIG=false
+# 1. 如果已有 vitest 專用設定 → 跳過
+HAS_VITEST_CONFIG=false
 for f in "$ABS_PROJECT_PATH/vitest.config.ts" \
-         "$ABS_PROJECT_PATH/vitest.config.js" \
-         "$ABS_PROJECT_PATH/vite.config.ts" \
-         "$ABS_PROJECT_PATH/vite.config.js"; do
+         "$ABS_PROJECT_PATH/vitest.config.js"; do
   if [ -f "$f" ]; then
-    HAS_CONFIG=true
-    log_success "找到設定檔：$(basename "$f")"
+    HAS_VITEST_CONFIG=true
+    log_success "找到 vitest 設定：$(basename "$f")，跳過建立"
     break
   fi
 done
 
-if [ "$HAS_CONFIG" = false ]; then
-  log_warn "找不到 vitest/vite 設定，建立基本設定..."
-  cat > "$ABS_PROJECT_PATH/vitest.config.ts" << 'VITEST_CONFIG'
+if [ "$HAS_VITEST_CONFIG" = false ]; then
+  # 2. 如果有 vite.config → 建立 vitest.config.ts 合併設定並加入 jsdom
+  VITE_CONFIG=""
+  for f in "$ABS_PROJECT_PATH/vite.config.ts" \
+           "$ABS_PROJECT_PATH/vite.config.js"; do
+    if [ -f "$f" ]; then
+      VITE_CONFIG="$(basename "$f")"
+      break
+    fi
+  done
+
+  if [ -n "$VITE_CONFIG" ]; then
+    log_warn "找到 $VITE_CONFIG 但沒有 vitest 專用設定，建立 vitest.config.ts 合併設定..."
+    VITE_CONFIG_NAME="${VITE_CONFIG%.*}"
+    cat > "$ABS_PROJECT_PATH/vitest.config.ts" << EOF
+import { defineConfig, mergeConfig } from 'vitest/config';
+import viteConfig from './${VITE_CONFIG_NAME}';
+
+export default mergeConfig(viteConfig, defineConfig({
+  test: {
+    environment: 'jsdom',
+    include: ['__generated_tests__/**/*.test.ts', '__generated_tests__/**/*.test.js'],
+  },
+}));
+EOF
+    log_success "已建立 vitest.config.ts（合併 $VITE_CONFIG）"
+  else
+    # 3. 完全沒有設定 → 建立獨立 vitest.config.ts
+    log_warn "找不到 vitest/vite 設定，建立基本設定..."
+    cat > "$ABS_PROJECT_PATH/vitest.config.ts" << 'VITEST_CONFIG'
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -189,7 +215,8 @@ export default defineConfig({
   },
 });
 VITEST_CONFIG
-  log_success "已建立 vitest.config.ts"
+    log_success "已建立 vitest.config.ts"
+  fi
 fi
 
 # ============================================================
