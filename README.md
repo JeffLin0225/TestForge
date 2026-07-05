@@ -14,6 +14,15 @@
 
 ---
 
+## 📖 文件
+
+| 文件 | 說明 |
+| --- | --- |
+| [SPEC.md](docs/SPEC.md) | 完整技術規格書 |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 系統架構文件 |
+
+---
+
 ## ✨ 功能特色
 
 | 功能 | 說明 |
@@ -228,15 +237,6 @@ TestForge 產生的報告包含：
 > 如果你想更醒目地展示，還能搭配 **GitHub Pages**，直接將該分支的 `coverage/index.html` 部署成精美的靜態網頁！
 
 **🔗 [👀 點這裡預覽 TestForge 產生的報告分支範例](https://github.com/JeffLin0225/testforge/tree/testforge/reports)**
-
----
-
-## 📖 文件
-
-| 文件 | 說明 |
-| --- | --- |
-| [SPEC.md](docs/SPEC.md) | 完整技術規格書 |
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 系統架構文件 |
 
 ---
 
