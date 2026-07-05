@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`isStrongPassword > 回傳值應與快照一致（偵測非預期變更） 1`] = `true`;
+
+exports[`isValidEmail > 回傳值應與快照一致（偵測非預期變更） 1`] = `true`;
+
+exports[`isValidPhone > 回傳值應與快照一致（偵測非預期變更） 1`] = `true`;
+
+exports[`isValidTWID > 回傳值應與快照一致（偵測非預期變更） 1`] = `false`;
+
+exports[`isValidUrl > 回傳值應與快照一致（偵測非預期變更） 1`] = `true`;
