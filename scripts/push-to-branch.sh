@@ -81,9 +81,11 @@ if [ -d "$COVERAGE_DIR" ]; then
   cp -r "$COVERAGE_DIR" "$TEMP_DIR/coverage"
 fi
 
-# ---- 暫存工作目錄的變更（CI 跑完測試後會有很多未提交的檔案） ----
-echo "📦 暫存工作目錄變更..."
-git stash --include-untracked --quiet 2>/dev/null || true
+# ---- 清理工作目錄（CI 跑完測試後會有大量臨時檔案）----
+# 用 reset + clean 而非 stash，避免 node_modules 等大量檔案被帶入報告分支
+echo "🧹 清理工作目錄..."
+git reset --hard HEAD --quiet 2>/dev/null || true
+git clean -fd --quiet 2>/dev/null || true
 
 # ---- 切換到報告分支 ----
 # 檢查遠端分支是否存在
@@ -145,7 +147,3 @@ fi
 
 # ---- 切回原本的分支 ----
 git checkout "$CURRENT_BRANCH" 2>/dev/null || git checkout -
-
-# ---- 還原工作目錄的變更 ----
-echo "📦 還原工作目錄..."
-git stash pop --quiet 2>/dev/null || true
