@@ -2,10 +2,15 @@
 
 > **自動化測試平台** — 掃描專案、產生測試、執行分析、產生報告，全部自動完成。
 
-![Tests](https://img.shields.io/badge/Tests-269_Passed-brightgreen)
-![Coverage](https://img.shields.io/badge/Coverage-88.48%25-brightgreen)
-![Node](https://img.shields.io/badge/Node.js-20+-green)
+![Tests](https://img.shields.io/badge/Tests-269_Passed-brightgreen?logo=vitest&logoColor=white)
+![Coverage](https://img.shields.io/badge/Coverage-88.48%25-brightgreen?logo=codecov&logoColor=white)
+![Node](https://img.shields.io/badge/Node.js-20+-green?logo=node.js&logoColor=white)
 ![License](https://img.shields.io/badge/License-ISC-blue)
+
+**📊 專案實測成果展示：**
+
+[![Reports Branch](https://img.shields.io/badge/%E9%BB%9E%E6%AD%A4%E6%9F%A5%E7%9C%8B-%E8%87%AA%E5%8B%95%E7%94%A2%E7%94%9F%E7%9A%84%E6%B8%AC%E8%A9%95%E5%A0%B1%E5%91%8A-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JeffLin0225/testforge/tree/testforge/reports)
+*(💡 點擊上方按鈕即可直接跳轉到 `testforge/reports` 分支，查看完整產生的測試程式碼與 HTML 互動式覆蓋率報告)*
 
 ---
 
@@ -213,7 +218,16 @@ TestForge 產生的報告包含：
 - **失敗明細**：失敗的測試名稱和錯誤訊息
 - **PR Comment**：自動在 Pull Request 上留言
 
-報告檔案會推送到 `testforge/reports` 分支，方便隨時查閱。
+> [!TIP]
+> **💡 為什麼要把報告放在獨立分支？**
+> 
+> 為了保持你專案的 `main` 分支乾淨！TestForge 會自動在**你的專案**中建立一個名為 `testforge/reports` 的孤兒分支（orphan branch），並將每次執行的測試腳本、測試報告與覆蓋率 HTML 推送上去。
+>
+> 這樣一來，你的主要程式碼庫不會被自動產生的測試檔給弄亂（避免大量雜訊），同時你又能隨時切換到報告分支查看完整的測試結果。
+> 
+> 如果你想更醒目地展示，還能搭配 **GitHub Pages**，直接將該分支的 `coverage/index.html` 部署成精美的靜態網頁！
+
+**🔗 [👀 點這裡預覽 TestForge 產生的報告分支範例](https://github.com/JeffLin0225/testforge/tree/testforge/reports)**
 
 ---
 
