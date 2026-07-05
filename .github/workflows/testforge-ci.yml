@@ -46,6 +46,7 @@ jobs:
         run: |
           cd sample-vue-project
           npx vitest run \
+            --update \
             --reporter=default \
             --reporter=json \
             --outputFile=testforge-results.json \

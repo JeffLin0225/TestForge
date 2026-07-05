@@ -200,8 +200,10 @@ log_step "Step 5：執行測試 & 覆蓋率分析"
 cd "$ABS_PROJECT_PATH"
 
 # 執行測試（即使部分失敗也繼續）
+# --update：自動更新快照（TestForge 每次重新產生測試，舊快照無意義）
 TEST_EXIT_CODE=0
 npx vitest run \
+  --update \
   --reporter=default \
   --reporter=json \
   --outputFile=testforge-results.json \

@@ -1,2 +1,13 @@
 node_modules/
 .DS_Store
+
+# 測試結果 & 覆蓋率（如果想作為 demo 展示，可以取消註解讓 Git 追蹤）
+# coverage/
+# test-results.json
+# testforge-results.json
+# testforge-pr-comment.md
+# TestForge-Report.md
+
+# 快照檔案（TestForge 每次重新產生測試，快照不應 commit）
+# 因為本地和 CI 環境不同，commit 快照會導致 CI 永遠失敗
+__snapshots__/

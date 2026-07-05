@@ -191,7 +191,9 @@ runs:
         cd "$PROJECT_PATH"
         
         # 執行測試（帶覆蓋率），即使測試失敗也繼續
+        # --update：自動更新快照（因為 TestForge 每次都重新產生測試，舊快照無意義）
         npx vitest run \
+          --update \
           --reporter=default \
           --reporter=json \
           --outputFile=testforge-results.json \
