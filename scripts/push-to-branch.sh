@@ -49,12 +49,8 @@ for f in "$REPO_ROOT/UnitTest-Report.md" \
   fi
 done
 
-# 覆蓋率目錄
-COVERAGE_DIR="$ABS_PROJECT_PATH/coverage"
-
-if [ ${#REPORT_FILES[@]} -eq 0 ] && [ ! -d "$COVERAGE_DIR" ]; then
-  echo "⚠️  沒有找到報告檔案，跳過推送"
-  exit 0
+if [ ${#REPORT_FILES[@]} -eq 0 ]; then
+  echo "⚠️  沒有找到報告檔案，稍後確認覆蓋率目錄後決定是否跳過"
 fi
 
 # ---- 設定 Git ----
@@ -77,8 +73,15 @@ for f in "${REPORT_FILES[@]}"; do
 done
 
 # 複製覆蓋率目錄（如果存在）
+COVERAGE_DIR="$ABS_PROJECT_PATH/coverage"
+echo "🔍 偵錯：ABS_PROJECT_PATH=$ABS_PROJECT_PATH"
+echo "🔍 偵錯：COVERAGE_DIR=$COVERAGE_DIR"
+echo "🔍 偵錯：coverage 目錄存在？$([ -d "$COVERAGE_DIR" ] && echo '是' || echo '否')"
+ls -la "$ABS_PROJECT_PATH" 2>/dev/null | head -20 || true
+
 if [ -d "$COVERAGE_DIR" ]; then
   cp -r "$COVERAGE_DIR" "$TEMP_DIR/coverage"
+  echo "✅ 已備份覆蓋率報告"
 fi
 
 # ---- 清理工作目錄（CI 跑完測試後會有大量臨時檔案）----
@@ -99,6 +102,13 @@ else
   git rm -rf . 2>/dev/null || true
 fi
 
+# ---- 建立 .gitignore 擋住 node_modules ----
+cat > .gitignore << 'GITIGNORE'
+node_modules/
+.DS_Store
+__generated_tests__/
+GITIGNORE
+
 # ---- 複製報告到分支 ----
 # 清除舊報告
 rm -f TestForge-Report.md UnitTest-Report.md Coverage-Report.md testforge-results.json
@@ -108,7 +118,10 @@ rm -rf coverage/
 cp "$TEMP_DIR/"*.md . 2>/dev/null || true
 cp "$TEMP_DIR/"*.json . 2>/dev/null || true
 if [ -d "$TEMP_DIR/coverage" ]; then
+  echo "📊 複製覆蓋率報告..."
   cp -r "$TEMP_DIR/coverage" .
+else
+  echo "⚠️  沒有找到覆蓋率資料（coverage 目錄不存在）"
 fi
 
 # 建立 index 頁面
