@@ -9,7 +9,7 @@
 
 **📊 專案實測成果展示：**
 
-[![Reports Branch](https://img.shields.io/badge/%E9%BB%9E%E6%AD%A4%E6%9F%A5%E7%9C%8B-%E8%87%AA%E5%8B%95%E7%94%A2%E7%94%9F%E7%9A%84%E6%B8%AC%E8%A9%95%E5%A0%B1%E5%91%8A-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JeffLin0225/testforge/tree/testforge/reports)
+[![Reports Branch](https://img.shields.io/badge/%E9%BB%9E%E6%AD%A4%E6%9F%A5%E7%9C%8B-%E8%87%AA%E5%8B%95%E7%94%A2%E7%94%9F%E7%9A%84%E6%B8%AC%E8%A9%95%E5%A0%B1%E5%91%8A-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JeffLin0225/testforge/tree/testforge/reports)<br>
 *(💡 點擊上方按鈕即可直接跳轉到 `testforge/reports` 分支，查看完整產生的測試程式碼與 HTML 互動式覆蓋率報告)*
 
 ---
