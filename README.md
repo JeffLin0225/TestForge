@@ -52,12 +52,16 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write        # 允許推送到 testforge/reports 分支
+  pull-requests: write   # 允許在 PR 上留言
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: JeffLin0225/testforge@v1
+      - uses: JeffLin0225/TestForge@v1
         with:
           project-path: './'
 ```
