@@ -1,7 +1,7 @@
 // ============================================
 // 🧪 TS 自動產生的測試 — by TestForge
 // 來源：useCart.ts
-// 產生時間：2026-07-10T09:23:53.830Z
+// 產生時間：2026-07-10T09:45:31.140Z
 // ============================================
 import { describe, it, expect } from 'vitest';
 import { calcItemSubtotal, calcCartTotal, applyDiscount, isFreeShipping, useCart } from '../../src/composables/useCart';

@@ -1,7 +1,7 @@
 // ============================================
 // 🟩 自動產生的 Vue 元件測試 — by TestForge
 // 來源：LoginForm.vue
-// 產生時間：2026-07-10T09:23:53.823Z
+// 產生時間：2026-07-10T09:45:31.133Z
 // ============================================
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
