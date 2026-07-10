@@ -109,6 +109,9 @@ node_modules/
 __generated_tests__/
 GITIGNORE
 
+# 建立 .nojekyll 確保 GitHub Pages 不會忽略包含底線的資料夾
+touch .nojekyll
+
 # ---- 複製報告到分支 ----
 # 清除舊報告
 rm -f TestForge-Report.md UnitTest-Report.md Coverage-Report.md testforge-results.json

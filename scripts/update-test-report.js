@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const REPORT_PATH = path.join(__dirname, 'UnitTest-Report.md');
-const RESULTS_PATH = path.join(__dirname, 'sample-vue-project', 'test-results.json');
+const REPORT_PATH = path.join(__dirname, '..', 'UnitTest-Report.md');
+const RESULTS_PATH = path.join(__dirname, '..', 'sample-vue-project', 'test-results.json');
 
 function updateReport() {
   if (!fs.existsSync(RESULTS_PATH)) {

@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "cd sample-vue-project && npm run test && cd .. && node update-test-report.js",
-    "test:coverage": "cd sample-vue-project && npm run test:coverage && cd .. && node update-readme.js"
+    "test": "cd sample-vue-project && npm run test && cd .. && node scripts/update-test-report.js",
+    "test:coverage": "cd sample-vue-project && npm run test:coverage && cd .. && node scripts/update-readme.js"
   },
   "keywords": [],
   "author": "",
