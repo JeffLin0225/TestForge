@@ -160,6 +160,10 @@ EOF
 git rm -rf --cached node_modules 2>/dev/null || true
 git rm -rf --cached .nuxt 2>/dev/null || true
 
+# 實體刪除不需要推送到分支的超大資料夾，避免 git add 不小心加進去
+echo "🗑️ 刪除不需要的暫存資料夾..."
+rm -rf node_modules .nuxt
+
 git add -A
 git commit -m "📊 TestForge: 更新測試報告 ($(date '+%Y-%m-%d %H:%M'))" \
   --allow-empty 2>/dev/null || true

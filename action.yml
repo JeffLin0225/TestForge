@@ -189,6 +189,11 @@ runs:
             environment: 'jsdom',
             include: ['__generated_tests__/**/*.test.ts', '__generated_tests__/**/*.test.js'],
             setupFiles: ['./testforge-setup.ts'],
+            coverage: {
+              provider: 'v8',
+              reporter: ['text', 'json-summary', 'html'],
+              reportsDirectory: './coverage'
+            }
           },
         }));
         EOF
@@ -211,6 +216,11 @@ runs:
             environment: 'jsdom',
             include: ['__generated_tests__/**/*.test.ts', '__generated_tests__/**/*.test.js'],
             setupFiles: ['./testforge-setup.ts'],
+            coverage: {
+              provider: 'v8',
+              reporter: ['text', 'json-summary', 'html'],
+              reportsDirectory: './coverage'
+            }
           },
         });
         EOF
@@ -222,6 +232,11 @@ runs:
             environment: 'jsdom',
             include: ['__generated_tests__/**/*.test.ts', '__generated_tests__/**/*.test.js'],
             setupFiles: ['./testforge-setup.ts'],
+            coverage: {
+              provider: 'v8',
+              reporter: ['text', 'json-summary', 'html'],
+              reportsDirectory: './coverage'
+            }
           },
         });
         EOF
@@ -247,9 +262,6 @@ runs:
           --reporter=json \
           --outputFile=testforge-results.json \
           --coverage \
-          --coverage.reporter=json-summary \
-          --coverage.reporter=text \
-          --coverage.reporter=html \
           2>&1 || true
         
         cd -
