@@ -110,7 +110,9 @@ runs:
         
         # 自動偵測框架
         if [ "$FRAMEWORK" = "auto" ]; then
-          if grep -q '"vue"' package.json 2>/dev/null; then
+          if grep -q '"nuxt"' package.json 2>/dev/null; then
+            FRAMEWORK="nuxt"
+          elif grep -q '"vue"' package.json 2>/dev/null; then
             FRAMEWORK="vue"
           elif grep -q '"react"' package.json 2>/dev/null; then
             FRAMEWORK="react"
@@ -126,7 +128,7 @@ runs:
         
         # 根據框架安裝額外依賴
         case "$FRAMEWORK" in
-          vue)
+          vue|nuxt)
             npm install --save-dev @vue/test-utils@latest jsdom@latest @vitest/coverage-v8@latest 2>/dev/null || true
             ;;
           react)

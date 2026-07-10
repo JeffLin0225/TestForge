@@ -66,6 +66,7 @@ TestForge 是一個**自動化測試平台**，目標是讓任何前端/Node.js 
 | `.jsx` | React JSX | Babel Parser (JSX plugin) |
 | `.tsx` | React TSX | Babel Parser (TypeScript + JSX) |
 | `.vue` | Vue SFC | 自訂 `<script>` / `<template>` 解析器 |
+| `.nuxt` | Nuxt 框架 | 繼承 Vue 解析器 (未來可針對 Nuxt 擴展 API 支援) |
 
 ### 2.3 支援的框架
 

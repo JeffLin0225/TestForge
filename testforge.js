@@ -27,6 +27,22 @@ const handlers = {
 
 const supportedExtensions = Object.keys(handlers);
 
+function detectFrameworkAndPatchHandlers(projectPath) {
+  try {
+    const pkgPath = path.join(projectPath, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+      const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+      if (deps['nuxt']) {
+        console.log('  🟢 偵測到 Nuxt 框架，將自動對 .vue 檔案套用 Nuxt 測試處理器');
+        handlers['.vue'] = require('./handlers/nuxt');
+      }
+    }
+  } catch (e) {
+    // 忽略解析錯誤
+  }
+}
+
 function main() {
   const targetDir = process.argv[2];
 
@@ -46,6 +62,8 @@ function main() {
     console.log(`\n  ❌ 目錄不存在：${projectPath}\n`);
     process.exit(1);
   }
+
+  detectFrameworkAndPatchHandlers(projectPath);
 
   console.log('');
   console.log('  ╔══════════════════════════════════════════════╗');

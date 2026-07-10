@@ -107,6 +107,7 @@ cat > .gitignore << 'GITIGNORE'
 node_modules/
 .DS_Store
 __generated_tests__/
+.nuxt/
 GITIGNORE
 
 # 建立 .nojekyll 確保 GitHub Pages 不會忽略包含底線的資料夾

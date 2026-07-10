@@ -1,6 +1,6 @@
 # TestForge 系統架構文件
 
-> 📅 最後更新：2026-07-05
+> 📅 最後更新：2026-07-10
 
 ---
 
@@ -14,22 +14,32 @@ graph TB
         SCRIPT["Shell Script<br/>scripts/run-testforge.sh"]
     end
 
-    subgraph "核心引擎"
-        SCANNER["📂 檔案掃描器<br/>scanDirectory()"]
-        AST["🌳 AST 分析器<br/>analyzeFile()"]
-        VUE_ANALYZER["🟩 Vue 元件分析器<br/>analyzeVueComponent()"]
-        GENERATOR["🧪 測試產生器<br/>generateVitest()"]
-        VUE_GEN["🟩 Vue 測試產生器<br/>generateVueComponentTest()"]
+    subgraph "核心引擎 (Orchestrator)"
+        SCANNER["📂 檔案掃描器<br/>testforge.js"]
+        DISPATCHER["🔀 處理器調度<br/>(根據副檔名派發)"]
+    end
+
+    subgraph "語言處理器 (Handlers)"
+        H_JS["🟨 JS/JSX Handler<br/>handlers/js.js"]
+        H_TS["🔷 TS/TSX Handler<br/>handlers/ts.js"]
+        H_VUE["🟩 Vue Handler<br/>handlers/vue.js"]
+        H_NUXT["🟢 Nuxt Handler<br/>handlers/nuxt.js"]
+    end
+
+    subgraph "共用工具 (Utils)"
+        U_AST["🌳 AST 分析器<br/>utils/ast-utils.js"]
+        U_TEST["🧪 測試值產生器<br/>utils/test-utils.js"]
+        U_VUE["🟩 Vue 解析器<br/>utils/vue-utils.js"]
     end
 
     subgraph "報告系統"
-        REPORT["📊 報告產生器<br/>generate-report.js"]
-        BRANCH["📤 分支推送<br/>push-to-branch.sh"]
+        REPORT["📊 報告產生器<br/>scripts/generate-report.js"]
+        BRANCH["📤 分支推送<br/>scripts/push-to-branch.sh"]
         PR_COMMENT["💬 PR Comment"]
     end
 
     subgraph "輸出"
-        TESTS["__generated_tests__/<br/>*.test.ts"]
+        TESTS["__generated_tests__/<br/>*.test.ts / *.test.js"]
         MD_REPORT["TestForge-Report.md"]
         REPORT_BRANCH["testforge/reports 分支"]
     end
@@ -38,12 +48,21 @@ graph TB
     GHA --> SCRIPT
     SCRIPT --> SCANNER
 
-    SCANNER --> AST
-    SCANNER --> VUE_ANALYZER
-    AST --> GENERATOR
-    VUE_ANALYZER --> VUE_GEN
-    GENERATOR --> TESTS
-    VUE_GEN --> TESTS
+    SCANNER --> DISPATCHER
+    DISPATCHER --> H_JS
+    DISPATCHER --> H_TS
+    DISPATCHER --> H_VUE
+    DISPATCHER --> H_NUXT
+
+    H_JS --> U_AST & U_TEST
+    H_TS --> U_AST & U_TEST
+    H_VUE --> U_AST & U_TEST & U_VUE
+    H_NUXT --> H_VUE
+
+    H_JS --> TESTS
+    H_TS --> TESTS
+    H_VUE --> TESTS
+    H_NUXT --> TESTS
 
     TESTS -->|vitest 執行| REPORT
     REPORT --> MD_REPORT
@@ -56,140 +75,33 @@ graph TB
 
 ## 2. 模組詳細說明
 
-### 2.1 檔案掃描器 (`scanDirectory`)
+### 2.1 核心調度器 (`testforge.js`)
 
-```mermaid
-graph LR
-    INPUT["專案根目錄"] --> WALK["遞迴走訪"]
-    WALK -->|跳過| IGNORE["node_modules<br/>dist<br/>.git<br/>coverage"]
-    WALK -->|匹配| FILTER["副檔名過濾<br/>.js .ts .vue .jsx .tsx"]
-    FILTER --> OUTPUT["檔案路徑列表<br/>（排序後）"]
-```
+核心調度器現在非常輕量化，主要負責：
+1. **掃描目錄**：遞迴找出目標專案中所有支援的檔案。
+2. **派發任務**：根據副檔名載入對應的 Handler（如 `.ts` 載入 `handlers/ts.js`）。
+3. **儲存結果**：接收 Handler 回傳的程式碼並寫入檔案系統。
 
-- **輸入**：專案根目錄路徑
-- **輸出**：排序後的檔案路徑陣列
-- **忽略清單**：`node_modules`, `dist`, `.git`, `.nuxt`, `.next`, `coverage`, `__tests__`, `__generated_tests__`
+### 2.2 共用工具 (`utils/`)
 
-### 2.2 AST 分析器 (`analyzeFile`)
+為了避免程式碼重複 (DRY 原則)，核心邏輯被抽取為共用工具：
 
-```mermaid
-graph TB
-    FILE["原始檔案"] --> CHECK{".vue 檔？"}
-    CHECK -->|是| EXTRACT["提取 script 區塊"]
-    CHECK -->|否| PARSE["直接解析"]
-    EXTRACT --> PARSE
+- **`utils/ast-utils.js`**：負責讀取原始碼，利用 Babel 解析成 AST (抽象語法樹)，並提供 `extractFunctionInfo` 等方法來擷取函數的名稱、參數、回傳型別與註解。
+- **`utils/test-utils.js`**：負責產生測試用的假資料 (Mock Data)、邊界值測試案例 (Edge Cases)，並提供型別檢查的邏輯。
+- **`utils/vue-utils.js`**：專門處理 `.vue` 檔案的 `<template>` 與 `<script>` 區塊拆分與分析，擷取 Props、Emits、DOM 元素 (如 Button, Input) 以及資料綁定。
 
-    PARSE --> BABEL["Babel Parser<br/>(TypeScript + JSX)"]
-    BABEL --> AST["AST 語法樹"]
+### 2.3 語言處理器 (`handlers/`)
 
-    AST --> TRAVERSE["遍歷頂層節點"]
-    TRAVERSE --> EXPORT["尋找 Export 宣告"]
+每種檔案類型都有對應的 Handler，介面皆實作 `analyze(filePath)` 與 `generate(result, importPath)`：
 
-    EXPORT --> NAMED["ExportNamedDeclaration"]
-    EXPORT --> DEFAULT["ExportDefaultDeclaration"]
-
-    NAMED --> FUNC_INFO["提取函數資訊"]
-    DEFAULT --> FUNC_INFO
-
-    FUNC_INFO --> RESULT["{ name, params, isAsync,<br/>returnType, comment }"]
-```
-
-**支援的 export 模式**：
-```javascript
-// 1. 命名匯出函數宣告
-export function foo(a: number): string { ... }
-
-// 2. 命名匯出箭頭函數
-export const bar = (a, b) => { ... }
-
-// 3. 命名匯出函數表達式
-export const baz = function(x) { ... }
-
-// 4. 預設匯出
-export default function() { ... }
-```
-
-**參數解析支援**：
-```javascript
-// 一般參數
-function(a: number) {}
-
-// 有預設值
-function(a = 5) {}
-
-// 解構參數
-function({ a, b }: Options) {}
-
-// 陣列解構
-function([a, b]) {}
-
-// Rest 參數
-function(...args) {}
-```
-
-### 2.3 Vue 元件分析器 (`analyzeVueComponent`)
-
-```mermaid
-graph TB
-    VUE[".vue 檔案"] --> TEMPLATE["提取 template"]
-    VUE --> SCRIPT_TAG["提取 script<br/>(偵測 setup)"]
-
-    TEMPLATE --> BUTTONS["提取按鈕<br/>button 標籤<br/>@click handler"]
-    TEMPLATE --> LINKS["提取連結<br/>a 標籤"]
-    TEMPLATE --> INPUTS["提取輸入框<br/>input / textarea / select<br/>v-model"]
-    TEMPLATE --> BINDINGS["提取文字綁定<br/>{{ expression }}"]
-    TEMPLATE --> CONDITIONALS["提取條件渲染<br/>v-if / v-show"]
-
-    SCRIPT_TAG --> PROPS["提取 defineProps<br/>TypeScript 泛型<br/>物件語法"]
-    SCRIPT_TAG --> EMITS["提取 defineEmits<br/>TypeScript 泛型<br/>陣列語法"]
-
-    BUTTONS --> RESULT["VueComponentResult"]
-    LINKS --> RESULT
-    INPUTS --> RESULT
-    BINDINGS --> RESULT
-    CONDITIONALS --> RESULT
-    PROPS --> RESULT
-    EMITS --> RESULT
-```
-
-### 2.4 測試產生器 (`generateVitest`)
-
-```mermaid
-graph TB
-    FUNC["函數資訊"] --> CLASSIFY{"async?"}
-    CLASSIFY -->|同步| SYNC["同步測試"]
-    CLASSIFY -->|非同步| ASYNC["非同步測試"]
-
-    SYNC --> BASIC["基本測試<br/>- 是函數<br/>- 參數數量<br/>- 不拋錯<br/>- 有回傳值"]
-    SYNC --> TYPE_CHECK["型別測試<br/>（如有 returnType）"]
-    SYNC --> SNAPSHOT["Snapshot 測試"]
-    SYNC --> EDGE["邊界值測試"]
-    SYNC --> OPTIONAL["可選參數測試"]
-
-    ASYNC --> PROMISE["Promise 測試<br/>- 回傳 Promise"]
-
-    EDGE --> NUM_EDGE["數字：0、負數、錯誤型別"]
-    EDGE --> STR_EDGE["字串：空字串、錯誤型別"]
-    EDGE --> ARR_EDGE["陣列：空陣列、錯誤型別"]
-    EDGE --> BOOL_EDGE["布林：false、錯誤型別"]
-    EDGE --> OBJ_EDGE["物件：null、空物件、錯誤型別"]
-    EDGE --> MISSING["缺少必填參數"]
-```
-
-### 2.5 報告產生器 (`generate-report.js`)
-
-```mermaid
-graph LR
-    TEST_JSON["testforge-results.json"] --> PARSE["解析結果"]
-    COVERAGE_JSON["coverage-summary.json"] --> PARSE
-
-    PARSE --> SUMMARY["計算摘要<br/>通過/失敗/覆蓋率"]
-
-    SUMMARY --> FULL["TestForge-Report.md<br/>完整報告"]
-    SUMMARY --> PR["testforge-pr-comment.md<br/>PR 留言內容"]
-    SUMMARY --> COMPAT["UnitTest-Report.md<br/>Coverage-Report.md<br/>（向下相容）"]
-    SUMMARY --> GH_OUTPUT["GitHub Actions<br/>Outputs"]
-```
+- **`handlers/js.js` & `handlers/ts.js`**：
+  使用 `utils/ast-utils.js` 分析原始碼，並產生對應的 Vitest 單元測試 (包含同步、非同步測試、快照測試等)。
+- **`handlers/vue.js`**：
+  整合 `utils/vue-utils.js` 與 AST 分析，一次產生兩份測試（如果適用）：
+  1. `<script>` 中導出函數的單元測試。
+  2. `<template>` 的 `@vue/test-utils` 元件掛載測試。
+- **`handlers/nuxt.js`**：
+  為支援 Nuxt 檔案而設計，目前繼承 `handlers/vue.js` 的邏輯，並對輸出的測試加入 Nuxt 專屬標籤，保留未來擴展 Nuxt 特定 API（如 `useAsyncData`）的彈性。
 
 ---
 
@@ -203,12 +115,10 @@ graph LR
   ├── node testforge.js ./project
   │     │
   │     ├── scanDirectory() → 檔案列表
-  │     ├── analyzeFile() × N → 函數資訊
-  │     ├── analyzeVueComponent() × N → 元件資訊
-  │     ├── generateVitest() × N → 測試程式碼
-  │     └── generateVueComponentTest() × N → 元件測試程式碼
-  │           │
-  │           └── 寫入 __generated_tests__/
+  │     ├── dispatcher (副檔名) → 呼叫 handler.analyze()
+  │     ├── handler.analyze() → 擷取函數/元件資訊
+  │     ├── handler.generate() → 產生測試程式碼陣列 [{ suffix, code }]
+  │     └── testforge.js → 寫入 __generated_tests__/
   │
   ├── npx vitest run → 測試結果 JSON
   │
@@ -241,15 +151,26 @@ GitHub Event (push / PR)
 ```
 testforge/
 ├── action.yml                      # GitHub Composite Action 定義
-├── testforge.js                    # 核心：AST 分析 + 測試產生
-├── 1-ast-analyzer.js               # 教學範例：AST 分析器
-├── 2-openapi-to-k6.js              # 教學範例：OpenAPI → k6
+├── testforge.js                    # 主入口：檔案掃描與任務調度 (Orchestrator)
 ├── package.json                    # 專案設定
 │
-├── scripts/
-│   ├── run-testforge.sh            # 主執行腳本（跨平台）
+├── handlers/                       # 語言專屬處理器
+│   ├── js.js
+│   ├── ts.js
+│   ├── vue.js
+│   └── nuxt.js
+│
+├── utils/                          # 核心共用邏輯
+│   ├── ast-utils.js                # Babel AST 分析
+│   ├── test-utils.js               # 測試案例產生邏輯
+│   └── vue-utils.js                # Vue template 解析
+│
+├── scripts/                        # 輔助與 CI 腳本
+│   ├── run-testforge.sh            # 主執行腳本
 │   ├── generate-report.js          # 統一報告產生器
-│   └── push-to-branch.sh           # 報告分支推送
+│   ├── push-to-branch.sh           # 報告分支推送
+│   ├── update-readme.js            # 覆蓋率報告更新器
+│   └── update-test-report.js       # 單元測試報告更新器
 │
 ├── .github/
 │   └── workflows/
@@ -261,17 +182,10 @@ testforge/
 │
 ├── sample-vue-project/             # 範例 Vue 專案
 │   ├── src/
-│   │   ├── App.vue
-│   │   ├── components/
-│   │   ├── composables/
-│   │   ├── utils/
-│   │   └── api/
 │   ├── __generated_tests__/        # TestForge 產生的測試
 │   ├── package.json
 │   └── vite.config.ts
 │
-├── update-test-report.js           # (舊) 測試報告更新器
-├── update-readme.js                # (舊) 覆蓋率報告更新器
 ├── UnitTest-Report.md              # 單元測試報告
 ├── Coverage-Report.md              # 覆蓋率報告
 └── README.md                       # 專案 README
@@ -279,7 +193,7 @@ testforge/
 
 ---
 
-## 5. 測試資料推測引擎
+## 5. 測試資料推測引擎 (`utils/test-utils.js`)
 
 TestForge 使用多層策略來推測合適的測試資料：
 
@@ -306,6 +220,7 @@ graph TB
 | --- | --- |
 | AST 解析失敗 | 跳過該檔案，輸出警告，繼續處理其他檔案 |
 | 沒有找到 exported 函數 | 跳過該檔案（可能是設定檔） |
+| 缺少 Handler 支援 | 跳過該附檔名的檔案 |
 | 部分測試失敗 | 繼續產生報告，在報告中標記失敗的測試 |
 | 覆蓋率低於門檻 | 在報告中標記警告，但不阻擋 CI |
 | 無法推送到分支 | 輸出警告，不影響測試結果 |
