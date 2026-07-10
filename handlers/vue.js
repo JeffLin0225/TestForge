@@ -101,6 +101,9 @@ function generateVueComponentTest(vueResult, importPath) {
   const mockProps = generateMockProps(props);
   const mockPropsStr = JSON.stringify(mockProps, null, 4).replace(/"/g, "'");
 
+  const importName = componentName.replace(/[^a-zA-Z0-9_$]/g, '_');
+  const safeImportName = importName === 'default' ? 'DefaultComponent' : importName;
+
   let code = `// ============================================
 // 🟩 自動產生的 Vue 元件測試 — by TestForge
 // 來源：${componentName}.vue
@@ -108,14 +111,14 @@ function generateVueComponentTest(vueResult, importPath) {
 // ============================================
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import ${componentName} from '${importPath}';
+import ${safeImportName} from '${importPath}';
 
 // Mock Props 資料
 const defaultProps = ${mockPropsStr};
 
 // 輔助函數：快速掛載元件
 function mountComponent(overrideProps = {}) {
-  return mount(${componentName}, {
+  return mount(${safeImportName}, {
     props: { ...defaultProps, ...overrideProps },
   });
 }

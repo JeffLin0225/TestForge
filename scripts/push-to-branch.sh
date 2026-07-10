@@ -158,6 +158,7 @@ EOF
 # ---- 提交 & 推送 ----
 # 移除可能被之前錯誤 commit 追蹤的 node_modules
 git rm -rf --cached node_modules 2>/dev/null || true
+git rm -rf --cached .nuxt 2>/dev/null || true
 
 git add -A
 git commit -m "📊 TestForge: 更新測試報告 ($(date '+%Y-%m-%d %H:%M'))" \

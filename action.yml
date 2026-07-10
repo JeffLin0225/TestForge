@@ -157,26 +157,29 @@ runs:
       run: |
         PROJECT_PATH="${{ inputs.project-path }}"
         
-        # 1. 如果已有 vitest 專用設定 → 跳過
-        for f in "$PROJECT_PATH/vitest.config.ts" "$PROJECT_PATH/vitest.config.js"; do
-          if [ -f "$f" ]; then
-            echo "✅ 找到 vitest 設定：$(basename "$f")，跳過建立"
-            exit 0
-          fi
-        done
-        
-        # 2. 如果有 vite.config → 建立 vitest.config.ts 合併設定並加入 jsdom
-        VITE_CONFIG=""
-        for f in "$PROJECT_PATH/vite.config.ts" "$PROJECT_PATH/vite.config.js"; do
-          if [ -f "$f" ]; then
-            VITE_CONFIG="$(basename "$f")"
-            break
-          fi
-        done
-        
-        if [ -n "$VITE_CONFIG" ]; then
-          echo "📝 找到 $VITE_CONFIG，建立 vitest.config.ts 合併設定（加入 jsdom 環境）..."
-          VITE_CONFIG_NAME="${VITE_CONFIG%.*}"
+        # 切換到專案目錄
+        cd "$PROJECT_PATH"
+
+        cat > "$PROJECT_PATH/testforge-setup.ts" << 'EOF'
+        import { vi } from 'vitest';
+        vi.stubGlobal('useRoute', () => ({ path: '/', query: {}, params: {} }));
+        vi.stubGlobal('useRouter', () => ({ push: vi.fn(), replace: vi.fn(), go: vi.fn(), back: vi.fn() }));
+        vi.stubGlobal('navigateTo', vi.fn());
+        vi.stubGlobal('useFetch', () => ({ data: { value: null }, pending: { value: false }, error: { value: null }, execute: vi.fn() }));
+        vi.stubGlobal('useAsyncData', () => ({ data: { value: null }, pending: { value: false }, error: { value: null }, execute: vi.fn() }));
+        vi.stubGlobal('useRuntimeConfig', () => ({ public: {} }));
+        vi.stubGlobal('definePageMeta', vi.fn());
+        EOF
+
+        # 1. 如果已有 vitest 專用設定 → 注入 setupFiles
+        if [ -f "vitest.config.ts" ]; then
+          echo "✅ 偵測到 vitest.config.ts"
+          # （這裡假設原專案設定能順利運作，若有問題則需手動排查）
+        # 2. 如果只有 vite 設定 → mergeConfig
+        elif [ -f "vite.config.ts" ] || [ -f "vite.config.js" ]; then
+          echo "📝 偵測到 vite 設定，建立 vitest.config.ts 並繼承"
+          VITE_CONFIG_NAME=$(ls vite.config.* | head -n 1)
+          
           cat > "$PROJECT_PATH/vitest.config.ts" << EOF
         import { defineConfig, mergeConfig } from 'vitest/config';
         import viteConfig from './${VITE_CONFIG_NAME}';
@@ -185,21 +188,44 @@ runs:
           test: {
             environment: 'jsdom',
             include: ['__generated_tests__/**/*.test.ts', '__generated_tests__/**/*.test.js'],
+            setupFiles: ['./testforge-setup.ts'],
           },
         }));
         EOF
         else
           # 3. 完全沒有設定 → 建立獨立 vitest.config.ts
           echo "📝 建立基本 vitest 設定..."
-          cat > "$PROJECT_PATH/vitest.config.ts" << 'EOF'
+          
+          HAS_VUE="false"
+          if grep -q '"vue"' "$PROJECT_PATH/package.json" 2>/dev/null || grep -q '"nuxt"' "$PROJECT_PATH/package.json" 2>/dev/null; then
+            HAS_VUE="true"
+          fi
+          
+          if [ "$HAS_VUE" = "true" ]; then
+            cat > "$PROJECT_PATH/vitest.config.ts" << 'EOF'
+        import { defineConfig } from 'vitest/config';
+        import vue from '@vitejs/plugin-vue';
+        export default defineConfig({
+          plugins: [vue()],
+          test: {
+            environment: 'jsdom',
+            include: ['__generated_tests__/**/*.test.ts', '__generated_tests__/**/*.test.js'],
+            setupFiles: ['./testforge-setup.ts'],
+          },
+        });
+        EOF
+          else
+            cat > "$PROJECT_PATH/vitest.config.ts" << 'EOF'
         import { defineConfig } from 'vitest/config';
         export default defineConfig({
           test: {
             environment: 'jsdom',
             include: ['__generated_tests__/**/*.test.ts', '__generated_tests__/**/*.test.js'],
+            setupFiles: ['./testforge-setup.ts'],
           },
         });
         EOF
+          fi
         fi
 
     # ---- Step 7：執行測試 ----
