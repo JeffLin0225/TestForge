@@ -1,7 +1,7 @@
 // ============================================
 // 🟩 自動產生的 Vue 元件測試 — by TestForge
 // 來源：UserCard.vue
-// 產生時間：2026-07-10T09:13:16.298Z
+// 產生時間：2026-07-10T09:23:53.825Z
 // ============================================
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
