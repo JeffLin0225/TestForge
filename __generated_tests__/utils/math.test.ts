@@ -1,7 +1,7 @@
 // ============================================
 // 🧪 TS 自動產生的測試 — by TestForge
 // 來源：math.ts
-// 產生時間：2026-07-10T08:10:23.436Z
+// 產生時間：2026-07-10T09:13:16.308Z
 // ============================================
 import { describe, it, expect } from 'vitest';
 import { add, subtract, average, percentage, roundTo } from '../../src/utils/math';

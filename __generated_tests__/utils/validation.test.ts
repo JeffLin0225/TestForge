@@ -1,7 +1,7 @@
 // ============================================
 // 🧪 TS 自動產生的測試 — by TestForge
 // 來源：validation.ts
-// 產生時間：2026-07-10T08:10:23.439Z
+// 產生時間：2026-07-10T09:13:16.311Z
 // ============================================
 import { describe, it, expect } from 'vitest';
 import { isValidEmail, isValidPhone, isStrongPassword, isValidUrl, isValidTWID } from '../../src/utils/validation';
