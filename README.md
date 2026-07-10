@@ -61,10 +61,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: JeffLin0225/TestForge@v1
+      - uses: JeffLin0225/testforge@main
         with:
           project-path: './'
 ```
+
+> **💡 版本提示**：
+> 範例中使用 `@main` 確保你總是能拿到最新修復的版本。如果追求穩定，也可以將 `@main` 替換為 `@v1`（需注意 `v1` 標籤可能較舊）。
 
 就這樣！TestForge 會自動：
 1. 🔍 掃描你的專案
@@ -96,7 +99,7 @@ bash scripts/run-testforge.sh /path/to/your/project
 ## ⚙️ GitHub Action 設定選項
 
 ```yaml
-- uses: JeffLin0225/testforge@v1
+- uses: JeffLin0225/testforge@main
   with:
     # 必填：要掃描的專案目錄
     project-path: './'
@@ -119,7 +122,7 @@ bash scripts/run-testforge.sh /path/to/your/project
     # 選填：自動安裝測試依賴（預設 true）
     install-dependencies: 'true'
     
-    # 選填：框架偵測（auto / vue / react / node，預設 auto）
+    # 選填：框架偵測（auto / vue / react / node / nuxt，預設 auto）
     framework: 'auto'
 ```
 
@@ -129,7 +132,7 @@ bash scripts/run-testforge.sh /path/to/your/project
 
 ```yaml
 steps:
-  - uses: JeffLin0225/testforge@v1
+  - uses: JeffLin0225/testforge@main
     id: testforge
     with:
       project-path: './'
