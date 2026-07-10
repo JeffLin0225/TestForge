@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`LoginForm.vue > 渲染結果應與快照一致 1`] = `
+"<form data-v-ba684ca4="" class="login-form">
+  <h2 data-v-ba684ca4="">登入</h2>
+  <div data-v-ba684ca4="" class="field"><label data-v-ba684ca4="" for="email">Email</label><input data-v-ba684ca4="" id="email" type="email" placeholder="請輸入 Email" required=""></div>
+  <div data-v-ba684ca4="" class="field"><label data-v-ba684ca4="" for="password">密碼</label><input data-v-ba684ca4="" id="password" type="password" placeholder="請輸入密碼" required=""></div>
+  <div data-v-ba684ca4="" class="field"><label data-v-ba684ca4=""><input data-v-ba684ca4="" type="checkbox"> 記住我 </label></div>
+  <p data-v-ba684ca4="" class="error">Test Value</p><button data-v-ba684ca4="" type="submit" disabled="">登入中...</button><button data-v-ba684ca4="" type="button" class="secondary"> 忘記密碼？ </button><a data-v-ba684ca4="" href="/register">還沒有帳號？立即註冊</a>
+</form>"
+`;

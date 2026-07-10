@@ -6,5 +6,6 @@
 
 - [TestForge-Report.md](./TestForge-Report.md) — 完整測試報告
 - [coverage/](./coverage/) — 互動式覆蓋率報告
+- [__generated_tests__/](./__generated_tests__/) — 自動產生的測試案例程式碼
 
 > ⚠️ 請勿手動修改此分支，它會在每次測試執行時自動更新。

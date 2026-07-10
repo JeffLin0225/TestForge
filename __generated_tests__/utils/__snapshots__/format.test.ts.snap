@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatDate > 回傳值應與快照一致（偵測非預期變更） 1`] = `"2026-07-10"`;
+
+exports[`formatDuration > 回傳值應與快照一致（偵測非預期變更） 1`] = `"01:39.989999999999995"`;
+
+exports[`formatFileSize > 回傳值應與快照一致（偵測非預期變更） 1`] = `"42.0 B"`;
+
+exports[`formatPrice > 回傳值應與快照一致（偵測非預期變更） 1`] = `"test 99.99"`;
+
+exports[`truncateText > 回傳值應與快照一致（偵測非預期變更） 1`] = `"test"`;
