@@ -84,6 +84,13 @@ if [ -d "$COVERAGE_DIR" ]; then
   echo "✅ 已備份覆蓋率報告"
 fi
 
+# 複製自動產生的測試案例（如果存在）
+TESTS_DIR="$ABS_PROJECT_PATH/__generated_tests__"
+if [ -d "$TESTS_DIR" ]; then
+  cp -r "$TESTS_DIR" "$TEMP_DIR/__generated_tests__"
+  echo "✅ 已備份自動產生的測試案例"
+fi
+
 # ---- 清理工作目錄（CI 跑完測試後會有大量臨時檔案）----
 # 用 reset + clean 而非 stash，避免 node_modules 等大量檔案被帶入報告分支
 echo "🧹 清理工作目錄..."
@@ -106,7 +113,6 @@ fi
 cat > .gitignore << 'GITIGNORE'
 node_modules/
 .DS_Store
-__generated_tests__/
 .nuxt/
 GITIGNORE
 
@@ -117,6 +123,7 @@ touch .nojekyll
 # 清除舊報告
 rm -f TestForge-Report.md UnitTest-Report.md Coverage-Report.md testforge-results.json
 rm -rf coverage/
+rm -rf __generated_tests__/
 
 # 複製新報告
 cp "$TEMP_DIR/"*.md . 2>/dev/null || true
@@ -126,6 +133,11 @@ if [ -d "$TEMP_DIR/coverage" ]; then
   cp -r "$TEMP_DIR/coverage" .
 else
   echo "⚠️  沒有找到覆蓋率資料（coverage 目錄不存在）"
+fi
+
+if [ -d "$TEMP_DIR/__generated_tests__" ]; then
+  echo "🧪 複製自動產生的測試案例..."
+  cp -r "$TEMP_DIR/__generated_tests__" .
 fi
 
 # 建立 index 頁面
@@ -138,6 +150,7 @@ cat > README.md << 'EOF'
 
 - [TestForge-Report.md](./TestForge-Report.md) — 完整測試報告
 - [coverage/](./coverage/) — 互動式覆蓋率報告
+- [__generated_tests__/](./__generated_tests__/) — 自動產生的測試案例程式碼
 
 > ⚠️ 請勿手動修改此分支，它會在每次測試執行時自動更新。
 EOF
